@@ -43,7 +43,24 @@ app.get('/todos/:id', (request, response) => {
     }
     response.send({todo});
   })
-  .catch(err => response.status(404).send());
+  .catch(err => response.status(400).send());
+});
+
+// DELETE /todos/:id
+app.delete('/todos/:id', (request, response) => {
+  const id = request.params.id;
+  if (!ObjectID.isValid(id)) {
+    response.status(400).send('ID is invalid');
+  }
+
+  Todo.findByIdAndRemove(id)
+  .then(todo => {
+    if (!todo) {
+      response.status(404).send('ID not found');
+    }
+    response.send(todo);
+  })
+  .catch(err => response.status(400).send());
 });
 
 
