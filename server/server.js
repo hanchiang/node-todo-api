@@ -13,8 +13,6 @@ app.use(bodyParser.json());
 
 // POST /todos
 app.post('/todos', (request, response) => {
-  console.log(request.body);
-
   const todo = new Todo({
     text: request.body.text
   });
@@ -36,7 +34,7 @@ app.get('/todos/:id', (request, response) => {
   if (!ObjectID.isValid(id)) {
     response.status(400).send('ID is invalid');
   }
-  
+
   Todo.findById(id)
   .then(todo => {
     if (!todo) {
