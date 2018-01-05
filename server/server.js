@@ -10,6 +10,7 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 
+// POST /todos
 app.post('/todos', (request, response) => {
   console.log(request.body);
 
@@ -20,6 +21,12 @@ app.post('/todos', (request, response) => {
   todo.save()
   .then(doc => response.send(doc))
   .catch(err => response.status(400).send(err));
+});
+
+// GET /todos
+app.get('/todos', (request, response) => {
+  const todos = Todo.find().then(todos => response.send({todos}))
+    .catch(err => response.status(400).send(err));
 });
 
 
