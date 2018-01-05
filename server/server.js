@@ -8,6 +8,7 @@ const { ObjectID } = require('mongodb');
 const { mongoose } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
 const { User } = require('./models/user');
+const { authenticate } = require('./middleware/authenticate');
 
 const app = express();
 const port = process.env.PORT;
@@ -15,6 +16,9 @@ const port = process.env.PORT;
 // Middleware
 app.use(bodyParser.json());
 
+/*
+ * Todos API
+ */ 
 // POST /todos
 app.post('/todos', (request, response) => {
   const todo = new Todo({
@@ -90,6 +94,33 @@ app.patch('/todos/:id', (request, response) => {
   })
   .catch(err => response.status(400).send(err));
 });
+
+/*
+ * Users API
+ */ 
+// POST /users - returns a token when user sign up
+app.post('/users', (request, response) => {
+  const user = new User({
+    email: request.body.email,
+    password: request.body.password
+  });
+
+  user.save().then(user => {
+    return user.generateAuthToken();
+  })
+  .then(token => {
+    response.header('x-auth', token).send({user});
+  })
+  .catch(err => response.status(400).send(err));
+});
+
+
+
+// GET /users/me
+app.get('/users/me', authenticate, (request, response) => {
+  response.send(request.user);
+});
+
 
 app.listen(port, () => console.log('Server is running on port ' + port));
 
