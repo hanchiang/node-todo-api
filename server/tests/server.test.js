@@ -10,7 +10,9 @@ const todos = [{
   text: 'First test todo'
 }, {
   _id: new ObjectID(),
-  text: 'Second test todo'
+  text: 'Second test todo',
+  completed: true,
+  completedAt: 123
 }];
 
 beforeEach((done) => {
@@ -134,10 +136,75 @@ describe('DELETE /todos/:id', () => {
     .end(done);
   });
 
-  it('should return 400 if id is invalid', (done) => {
+  it('should return 400 if ID is invalid', (done) => {
     request(app)
       .delete('/todos/123')
       .expect(400)
       .end(done);
   });
 })
+
+describe('PATCH /todos/:id', () => {
+  it('should set completedAt when todo is completed', (done) => {
+    const id = todos[0]._id.toString();
+    const body = {
+      text: 'Updated text!',
+      completed: true
+    };
+
+    request(app)
+    .patch(`/todos/${id}`)
+    .send(body)
+    .expect(200)
+    .expect(response => {
+      expect(response.body.todo.text).toBe(body.text);
+      expect(response.body.todo.completed).toBe(true);
+      expect(response.body.todo.completedAt).toBeA('number');
+    })
+    .end(done);
+  });
+
+  it('should clear completedAt when todo is not completed', (done) => {
+    const id = todos[1]._id.toString();
+    const body = {
+      text: 'Updated text2!',
+      completed: false
+    };
+
+    request(app)
+    .patch(`/todos/${id}`)
+    .send(body)
+    .expect(200)
+    .expect(response => {
+      expect(response.body.todo.text).toBe(body.text);
+      expect(response.body.todo.completed).toBe(false);
+      expect(response.body.todo.completedAt).toNotExist();
+    })
+    .end(done);
+  })
+
+  it('should return 404 if todo is not found', (done) => {
+    const id = new ObjectID().toString();
+    const body = {
+      text: 'Updated text3!',
+      completed: false
+    };
+
+    request(app)
+    .patch(`/todos/${id}`)
+    .expect(404)
+    .end(done);
+  });
+
+  it('should return 404 if todo is not found', (done) => {
+    const body = {
+      text: 'Updated text4!',
+      completed: false
+    };
+
+    request(app)
+      .patch('/todos/123')
+      .expect(400)
+      .end(done);
+  });
+});
