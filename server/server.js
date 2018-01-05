@@ -19,7 +19,7 @@ app.post('/todos', (request, response) => {
   });
 
   todo.save()
-  .then(doc => response.send(doc))
+  .then(todo => response.send({todo}))
   .catch(err => response.status(400).send(err));
 });
 
@@ -58,7 +58,7 @@ app.delete('/todos/:id', (request, response) => {
     if (!todo) {
       response.status(404).send('ID not found');
     }
-    response.send(todo);
+    response.send({todo});
   })
   .catch(err => response.status(400).send());
 });

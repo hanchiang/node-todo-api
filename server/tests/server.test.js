@@ -30,7 +30,7 @@ describe('POST /todos', () => {
     .expect(200)
     .expect(response => {
       // Test response return correct body text
-      expect(response.body.text).toBe(text);
+      expect(response.body.todo.text).toBe(text);
     })
     .end((err, response) => {
       if (err) {
@@ -94,10 +94,50 @@ describe('GET /todos/:id', () => {
     .end(done);
   });
 
-  it('should return 400 if is is invalid', (done) => {
+  it('should return 400 if id is invalid', (done) => {
     request(app)
     .get('/todos/123')
     .expect(400)
     .end(done);
   });
 });
+
+describe('DELETE /todos/:id', () => {
+  it('should remove a todo', (done) => {
+    const id = todos[0]._id.toString();
+    request(app)
+    .delete(`/todos/${id}`)
+    .expect(200)
+    .expect(response => {
+      expect(response.body.todo._id).toBe(id);
+    })
+    .end((err, response) => {
+      if (err) {
+        return done(err);
+      }
+
+      Todo.findById(id)
+      .then(todo => {
+        expect(todo).toNotExist();
+        done();
+      })
+      .catch(err => done(err));
+    })
+  });
+
+  it('should return 404 if todo is not found', (done) => {
+    const id = new ObjectID().toString();
+
+    request(app)
+    .delete(`/todos/${id}`)
+    .expect(404)
+    .end(done);
+  });
+
+  it('should return 400 if id is invalid', (done) => {
+    request(app)
+      .delete('/todos/123')
+      .expect(400)
+      .end(done);
+  });
+})
