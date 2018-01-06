@@ -115,7 +115,7 @@ app.post('/users', (request, response) => {
 });
 
 
-// GET /users/me
+// GET /users/me - Private route
 app.get('/users/me', authenticate, (request, response) => {
   response.send(request.user);
 });
@@ -132,6 +132,12 @@ app.post('/users/login', (request, response) => {
   .catch(err => response.status(400).send(err));
 });
 
+// DELETE /users/me/token - Private route
+app.delete('/users/me/token', authenticate, (request, response) => {
+  request.user.removeToken(request.token)
+  .then(() => response.send())
+  .catch(err => response.status(400).send(err));
+});
 
 app.listen(port, () => console.log('Server is running on port ' + port));
 
