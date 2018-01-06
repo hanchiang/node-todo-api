@@ -115,10 +115,21 @@ app.post('/users', (request, response) => {
 });
 
 
-
 // GET /users/me
 app.get('/users/me', authenticate, (request, response) => {
   response.send(request.user);
+});
+
+// POST /users/login
+app.post('/users/login', (request, response) => {
+  const { email, password } = request.body;
+
+  User.findByCredentials(email, password)
+  .then(user => {
+    return user.generateAuthToken()
+    .then(token => response.header('x-auth', token).send({user}))
+  })
+  .catch(err => response.status(400).send(err));
 });
 
 
