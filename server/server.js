@@ -20,9 +20,10 @@ app.use(bodyParser.json());
  * Todos API
  */ 
 // POST /todos
-app.post('/todos', (request, response) => {
+app.post('/todos', authenticate, (request, response) => {
   const todo = new Todo({
-    text: request.body.text
+    text: request.body.text,
+    _creator: request.user._id
   });
 
   todo.save()
@@ -31,19 +32,21 @@ app.post('/todos', (request, response) => {
 });
 
 // GET /todos
-app.get('/todos', (request, response) => {
-  const todos = Todo.find().then(todos => response.send({todos}))
+app.get('/todos', authenticate, (request, response) => {
+  const todos = Todo.find({
+    _creator: request.user._id
+  }).then(todos => response.send({todos}))
     .catch(err => response.status(400).send(err));
 });
 
 // GET /todos/:id
-app.get('/todos/:id', (request, response) => {
+app.get('/todos/:id', authenticate, (request, response) => {
   const id = request.params.id;
   if (!ObjectID.isValid(id)) {
     response.status(400).send('ID is invalid');
   }
 
-  Todo.findById(id)
+  Todo.findOne({_id: id, _creator: request.user._id})
   .then(todo => {
     if (!todo) {
       response.status(404).send('ID not found');
@@ -54,13 +57,13 @@ app.get('/todos/:id', (request, response) => {
 });
 
 // DELETE /todos/:id
-app.delete('/todos/:id', (request, response) => {
+app.delete('/todos/:id', authenticate, (request, response) => {
   const id = request.params.id;
   if (!ObjectID.isValid(id)) {
     response.status(400).send('ID is invalid');
   }
 
-  Todo.findByIdAndRemove(id)
+  Todo.findOneAndRemove({_id: id, _creator: request.user._id})
   .then(todo => {
     if (!todo) {
       response.status(404).send('ID not found');
@@ -71,7 +74,7 @@ app.delete('/todos/:id', (request, response) => {
 });
 
 // PATCH /todos/:id
-app.patch('/todos/:id', (request, response) => {
+app.patch('/todos/:id', authenticate, (request, response) => {
   const id = request.params.id;
   if (!ObjectID.isValid(id)) {
     response.status(400).send('ID is invalid');
@@ -85,7 +88,10 @@ app.patch('/todos/:id', (request, response) => {
     body.completedAt = null;
   }
 
-  Todo.findByIdAndUpdate(id, {$set: body}, {new: true})
+  Todo.findOneAndUpdate(
+    {_id: id, _creator: request.user._id},
+    {$set: body},
+    {new: true})
   .then(todo => {
     if (!todo) {
       return response.status(404).send('ID not found');
